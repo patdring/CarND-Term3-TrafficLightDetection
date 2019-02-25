@@ -21,7 +21,7 @@ def load_image_into_numpy_array(image):
 def tl_detector(PATH_TO_TEST_IMAGES_DIR, Num_images):
 
     # path to test images
-    TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'image{}.jpg'.format(i)) for i in range(1, Num_images+1) ]
+    TEST_IMAGE_PATHS = [ os.path.join(PATH_TO_TEST_IMAGES_DIR, 'img_{}.jpg'.format(i)) for i in range(1, Num_images+1) ]
 
     MODEL_NAME = 'faster_rcnn_resnet101_coco_11_06_2017'
 
@@ -106,6 +106,7 @@ def tl_detector(PATH_TO_TEST_IMAGES_DIR, Num_images):
                 result.save('./test_images_output/image' + str(idx) +'.png')
 
                 w, h = image.size
+
                 np_boxes = np.squeeze(boxes) 
                 np_scores = np.squeeze(scores) 
                 np_classes = np.squeeze(classes).astype(np.int32)
@@ -115,14 +116,34 @@ def tl_detector(PATH_TO_TEST_IMAGES_DIR, Num_images):
                        yMin, xMin, yMax, xMax = tuple(np_boxes[idx2].tolist())
                        (left, right, top, bottom) = (xMin*w, xMax*w, yMin*h, yMax*h)
                        crop_img = image.crop((left, top, right, bottom)) 
-                       save_at_template = os.path.join("./test_images_output", "image"+str(idx)+"_cropped_{:03}.png")
-                       crop_img.save(save_at_template.format(idx2))
+                       
+                       w_c, h_c = (40, 100) 
+                       total_pixels = w_c * h_c
+                       res = cv2.resize(np.array(crop_img), (w_c, h_c), interpolation=cv2.INTER_LINEAR)
+                       hsv=cv2.cvtColor(res, cv2.COLOR_RGB2HSV)
 
+                       lower_range_0 = np.array([0,75,55])
+                       upper_range_0 = np.array([10,255,255])
+                       mask_0 = cv2.inRange(hsv, lower_range_0, upper_range_0)
+
+                       lower_range_1 = np.array([160,75,55])
+                       upper_range_1 = np.array([180,255,255])
+                       mask_1 = cv2.inRange(hsv, lower_range_1, upper_range_1)
+
+                       mask = mask_0+mask_1
+
+                       ratio =  np.sum(mask != 0) / total_pixels
+
+                       if ratio > 0.05:
+                           save_at_template = os.path.join("./test_images_output", "image"+str(idx)+"_cropped_{:02}_stop.png")
+                       else:
+                           save_at_template = os.path.join("./test_images_output", "image"+str(idx)+"_cropped_{:02}_go.png")
+                       crop_img.save(save_at_template.format(idx2))
                 idx=idx+1
 
 if __name__ == "__main__":
 
-    Num_images = 10
+    Num_images = 17
     PATH_TO_TEST_IMAGES_DIR = './test_images_input'
 
     tl_detector(PATH_TO_TEST_IMAGES_DIR, Num_images)
