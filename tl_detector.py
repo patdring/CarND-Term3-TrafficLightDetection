@@ -65,6 +65,7 @@ def tl_detector(PATH_TO_TEST_IMAGES_DIR):
                     feed_dict={image_tensor: image_expanded})
                 
                 print('---------------')
+                print(img_path)
                 print('SCORES')
                 print(scores[0][0])
                 print('CLASSES')
@@ -72,15 +73,15 @@ def tl_detector(PATH_TO_TEST_IMAGES_DIR):
                 
                 if (scores[0][0] >= 0.5):
                     if(classes[0][0] == 1):
-                        print('RED')
+                        print('-> RED')
                     if(classes[0][0] == 2):
-                        print('YELLOW')
+                        print('-> YELLOW')
                     if(classes[0][0] == 3):
-                        print('GREEN')
+                        print('-> GREEN')
                     if(classes[0][0] == 4):
-                        print('UNKNOWN')
+                        print('-> UNKNOWN')
                 else:
-                    print('UNKNOWN')
+                    print('! UNKNOWN')
                 print('---------------')
                 
                 vis_util.visualize_boxes_and_labels_on_image_array(
